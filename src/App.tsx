@@ -1,7 +1,7 @@
-import MarqueeAlongSvgPathDemo from '@/components/ui/demo'
+import OrbitingCircles02Demo from '@/components/ui/orbiting-circles-02-demo'
 
 function App() {
-  return <MarqueeAlongSvgPathDemo />
+  return <OrbitingCircles02Demo />
 }
 
 export default App
