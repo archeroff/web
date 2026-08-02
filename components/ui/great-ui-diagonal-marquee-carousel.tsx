@@ -10,7 +10,7 @@ export interface CardItem {
 }
 
 export interface DiagonalMarqueeCarouselProps {
-  cards?: CardItem[];
+  cards: CardItem[];
   angle?: number;
   baseSpeed?: number;
   alternateDirections?: boolean;
@@ -19,35 +19,6 @@ export interface DiagonalMarqueeCarouselProps {
   fadeClassName?: string;
 }
 
-const imgPath = (n: number) => {
-  const ext =
-    n === 1
-      ? "png"
-      : n === 3 || n === 13
-        ? "webp"
-        : n === 15
-          ? "jpg"
-          : "jpeg";
-  return `/img/${n}.${ext}`;
-};
-
-const DEFAULT_CARDS: CardItem[] = [
-  { id: 1, url: imgPath(1), title: "Al Riyadi dish 1" },
-  { id: 2, url: imgPath(2), title: "Al Riyadi dish 2" },
-  { id: 3, url: imgPath(3), title: "Al Riyadi dish 3" },
-  { id: 4, url: imgPath(4), title: "Al Riyadi dish 4" },
-  { id: 5, url: imgPath(5), title: "Al Riyadi dish 5" },
-  { id: 6, url: imgPath(6), title: "Al Riyadi dish 6" },
-  { id: 7, url: imgPath(7), title: "Al Riyadi dish 7" },
-  { id: 8, url: imgPath(8), title: "Al Riyadi dish 8" },
-  { id: 9, url: imgPath(9), title: "Al Riyadi dish 9" },
-  { id: 10, url: imgPath(10), title: "Al Riyadi dish 10" },
-  { id: 11, url: imgPath(11), title: "Al Riyadi dish 11" },
-  { id: 12, url: imgPath(12), title: "Al Riyadi dish 12" },
-  { id: 13, url: imgPath(13), title: "Al Riyadi dish 13" },
-  { id: 14, url: imgPath(14), title: "Al Riyadi dish 14" },
-  { id: 15, url: imgPath(15), title: "Al Riyadi dish 15" },
-];
 
 const Card = ({ card, className }: { card: CardItem; className?: string }) => {
   return (
@@ -110,7 +81,7 @@ const MarqueeRow = ({
 };
 
 export default function DiagonalMarqueeCarousel({
-  cards = DEFAULT_CARDS,
+  cards,
   angle = -25,
   baseSpeed = 120,
   alternateDirections = true,

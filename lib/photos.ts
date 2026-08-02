@@ -11,23 +11,7 @@ export interface Photo {
 
 export type PhotoCard = Pick<Photo, "id" | "url" | "alt">
 
-const imgPath = (n: number) => {
-  const ext =
-    n === 1
-      ? "png"
-      : n === 3 || n === 13
-        ? "webp"
-        : n === 15
-          ? "jpg"
-          : "jpeg"
-  return `/img/${n}.${ext}`
-}
-
-export const FALLBACK_PHOTOS: PhotoCard[] = Array.from({ length: 15 }, (_, i) => ({
-  id: `local-${i + 1}`,
-  url: imgPath(i + 1),
-  alt: `Al Riyadi dish ${i + 1}`,
-}))
+export const FALLBACK_PHOTOS: PhotoCard[] = []
 
 const storageNameFromUrl = (url: string): string | null => {
   const marker = "/object/public/photos/"

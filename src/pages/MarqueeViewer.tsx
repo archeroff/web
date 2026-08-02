@@ -49,6 +49,24 @@ export default function MarqueeViewer() {
 
   const cardProps = useMemo(() => ({ cards: photos }), [photos])
 
+  if (photos.length === 0) {
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center gap-4 p-6 text-center">
+        <h2 className="text-2xl font-semibold tracking-tight">No photos yet</h2>
+        <p className="max-w-md text-sm text-muted-foreground">
+          Upload photos from the upload page, then approve them in the admin
+          panel to show them here.
+        </p>
+        <a
+          href="/upload"
+          className="mt-2 inline-flex h-10 items-center justify-center rounded-full bg-foreground px-6 text-sm font-medium text-background shadow-lg transition-opacity hover:opacity-90"
+        >
+          Upload photos
+        </a>
+      </div>
+    )
+  }
+
   return (
     <div
       className="relative h-screen w-full overflow-hidden"
