@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase"
+import { supabase, SUPABASE_URL } from "@/lib/supabase"
 
 export interface Photo {
   id: string
@@ -52,13 +52,24 @@ export interface UploadStatus {
   configured: boolean
   bucketExists: boolean | null
   bucketError?: string
+  host?: string
 }
 
 export async function getUploadStatus(): Promise<UploadStatus> {
   if (!supabase) return { configured: false, bucketExists: null }
-  const { data, error } = await supabase.storage.listBuckets()
-  if (error) return { configured: true, bucketExists: null, bucketError: error.message }
-  return { configured: true, bucketExists: data.some((b) => b.id === "photos") }
+  const host = SUPABASE_URL
+  const { error } = await supabase.storage.from("photos").list("", { limit: 1 })
+  if (error) {
+    const msg = error.message || String(error)
+    const looksMissing = /bucket|not found|404/i.test(msg)
+    return {
+      configured: true,
+      bucketExists: looksMissing ? false : null,
+      bucketError: msg,
+      host,
+    }
+  }
+  return { configured: true, bucketExists: true, host }
 }
 
 export async function uploadPhoto(file: File): Promise<{ ok: boolean; error?: string }> {

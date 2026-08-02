@@ -31,15 +31,18 @@ export default function UploadPage() {
   const inputRef = useRef<HTMLInputElement>(null)
 
   const configured = isSupabaseConfigured()
-  const [status, setStatus] = useState<{ bucketExists: boolean | null; bucketError?: string }>({
-    bucketExists: null,
-  })
+  const [status, setStatus] = useState<{
+    bucketExists: boolean | null
+    bucketError?: string
+    host?: string
+  }>({ bucketExists: null })
 
   useEffect(() => {
     if (!configured) return
     let alive = true
     getUploadStatus().then((s) => {
-      if (alive) setStatus({ bucketExists: s.bucketExists, bucketError: s.bucketError })
+      if (alive)
+        setStatus({ bucketExists: s.bucketExists, bucketError: s.bucketError, host: s.host })
     })
     return () => {
       alive = false
@@ -119,13 +122,16 @@ export default function UploadPage() {
             {status.bucketExists === false && (
               <div className="mb-4 rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
                 The <code className="font-mono text-xs">photos</code> storage bucket
-                doesn&apos;t exist yet. Run <code className="font-mono text-xs">supabase/schema.sql</code>{' '}
-                in the Supabase SQL editor, then retry.
+                doesn&apos;t exist yet in this project. Run{' '}
+                <code className="font-mono text-xs">supabase/schema.sql</code> in the Supabase
+                SQL editor of the project that serves <code className="font-mono text-xs">{status.host}</code>,
+                then retry.
               </div>
             )}
             {status.bucketError && (
               <div className="mb-4 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-600 dark:text-amber-400">
-                Couldn&apos;t reach Supabase storage: {status.bucketError}
+                Supabase storage ({status.host}) returned:{' '}
+                <code className="font-mono text-xs">{status.bucketError}</code>
               </div>
             )}
             <div

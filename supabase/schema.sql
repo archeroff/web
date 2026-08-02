@@ -24,6 +24,11 @@ begin
 end $$;
 
 -- Storage access policies (idempotent)
+drop policy if exists "public read photos bucket list" on storage.buckets;
+create policy "public read photos bucket list"
+  on storage.buckets for select to anon, authenticated
+  using (id = 'photos');
+
 drop policy if exists "public upload photos" on storage.objects;
 create policy "public upload photos"
   on storage.objects for insert to anon, authenticated
