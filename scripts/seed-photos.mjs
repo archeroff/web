@@ -8,12 +8,15 @@
 // Reads credentials from .env.local / .env or the shell:
 //   SUPABASE_URL=
 //   SUPABASE_PUBLISHABLE_KEY=
-//   SUPABASE_SECRET_KEY=   (service role key — required for schema bootstrap)
+//   SUPABASE_SECRET_KEY=   (service role key — used for storage/uploads)
+//   SUPABASE_ACCESS_TOKEN= (Supabase personal access token — required to apply
+//                           the schema remotely via the Management API)
 //   ADMIN_MASTER_PASS=     (optional, seeds the admin master password hash)
 //
-// When SUPABASE_SECRET_KEY is present the script applies supabase/schema.sql
-// through the Supabase SQL API, then uploads photos. Without it, the bucket
-// must already exist and the schema must already be applied.
+// The schema (supabase/schema.sql) is applied via the Management API when
+// SUPABASE_ACCESS_TOKEN is set; without it, schema apply is skipped and the
+// script only seeds photos. Photos are uploaded using the publishable/secret
+// key, so seeding works as long as the bucket already exists.
 
 import { createClient } from "@supabase/supabase-js"
 import { readdir, readFile } from "node:fs/promises"
@@ -79,35 +82,45 @@ const mime = (name) => {
 
 const sqlLit = (s) => `'${String(s).replace(/'/g, "''")}'`
 
-// Execute arbitrary SQL through Supabase's SQL API using the service role key.
+const accessToken = process.env.SUPABASE_ACCESS_TOKEN
+
+// Project ref, e.g. https://<ref>.supabase.co -> <ref>
+let projectRef = null
+try {
+  projectRef = new URL(url).hostname.split(".")[0]
+} catch {
+  projectRef = null
+}
+
+// Execute arbitrary SQL via the Supabase Management API (requires a PAT).
+// The REST SQL endpoints (/pg/query/v1/query, rpc/pg_query) are not available
+// on current projects, so this is the supported remote way to run DDL.
 async function runSql(sqlText) {
-  const attempts = [
-    { name: "/pg/query/v1/query", body: JSON.stringify({ query: sqlText }) },
-    { name: "/rest/v1/rpc/pg_query", body: JSON.stringify({ query: sqlText }) },
-  ]
-  for (const attempt of attempts) {
-    try {
-      const res = await fetch(`${url}${attempt.name}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: secret,
-          Authorization: `Bearer ${secret}`,
-        },
-        body: attempt.body,
-      })
-      if (res.ok) {
-        console.log(`  ✓ SQL executed via ${attempt.name}`)
-        return true
-      }
-      console.log(
-        `  ⚠ ${attempt.name} failed (${res.status}): ${(await res.text()).slice(0, 300)}`,
-      )
-    } catch (e) {
-      console.log(`  ⚠ ${attempt.name} threw: ${e.message}`)
-    }
+  if (!accessToken || !projectRef) return false
+  const res = await fetch(
+    `https://api.supabase.com/v1/projects/${projectRef}/database/query`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+        "X-Client-Info": "alriyadi-seed/1.0",
+      },
+      body: JSON.stringify({ query: sqlText }),
+    },
+  )
+  if (!res.ok) {
+    console.log(`  ⚠ Management API failed (${res.status}): ${(await res.text()).slice(0, 300)}`)
+    return false
   }
-  return false
+  console.log("  ✓ SQL executed via Management API")
+  return true
+}
+
+// supabase-js constructs a Realtime client at startup, which needs a global
+// WebSocket (missing on Node 20). This script never uses Realtime, so shim it.
+if (typeof globalThis.WebSocket === "undefined") {
+  globalThis.WebSocket = class WebSocketShim {}
 }
 
 const supabase = createClient(url, key, {
@@ -115,14 +128,17 @@ const supabase = createClient(url, key, {
 })
 
 // ---- apply schema (bucket, storage policies, tables, RLS, RPCs, grants) ----
-if (secret) {
+// Requires a Supabase personal access token (SUPABASE_ACCESS_TOKEN). Without
+// one this is skipped non-fatally — the schema is applied manually from
+// supabase/schema.sql in the SQL editor instead.
+if (accessToken && projectRef) {
   const schemaSql = await readFile(path.join(root, "supabase", "schema.sql"), "utf8")
-  console.log("Applying supabase/schema.sql via the SQL API…")
+  console.log("Applying supabase/schema.sql via the Management API…")
   if (!(await runSql(schemaSql))) {
     console.error(
-      "\nCould not apply the schema automatically. Paste supabase/schema.sql into " +
-        "the Supabase SQL editor (https://supabase.com/dashboard/project/_/sql/new), " +
-        "then re-run this workflow.",
+      "\nCould not apply the schema automatically. Check the SUPABASE_ACCESS_TOKEN " +
+        "GitHub secret, or paste supabase/schema.sql into the Supabase SQL editor " +
+        "(https://supabase.com/dashboard/project/_/sql/new), then re-run this workflow.",
     )
     process.exit(1)
   }
@@ -138,10 +154,15 @@ if (secret) {
       console.warn("  ⚠ Could not seed the master password hash.")
     }
   }
+} else {
+  console.warn(
+    "  ⚠ No SUPABASE_ACCESS_TOKEN configured — skipping automatic schema apply. " +
+      "Apply supabase/schema.sql manually in the SQL editor to keep the backend up to date.",
+  )
 }
 
 if (schemaOnly) {
-  console.log("Schema applied in schema-only mode. Skipping photo upload.")
+  console.log("Schema-only mode done.")
   process.exit(0)
 }
 
