@@ -1,12 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import DiagonalMarqueeCarouselPreview from '@/components/ui/great-ui-diagonal-marquee-carousel-demo'
-import MarqueeAlongSvgPathDemo from '@/components/ui/demo'
 import CardFanCarouselDemo from '@/components/ui/card-fan-carousel-demo'
 import { FALLBACK_PHOTOS, listApproved, type PhotoCard } from '@/lib/photos'
 
 const SWIPE_THRESHOLD = 50
-const MARQUEE_COUNT = 3
+const MARQUEE_COUNT = 2
 
 const navButtonClasses =
   'absolute top-1/2 -translate-y-1/2 z-50 flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white/80 text-black/70 shadow-lg backdrop-blur-sm hover:bg-white dark:border-white/10 dark:bg-black/50 dark:text-white/70 dark:hover:bg-black/70'
@@ -49,10 +48,6 @@ export default function MarqueeViewer() {
   }
 
   const cardProps = useMemo(() => ({ cards: photos }), [photos])
-  const imageProps = useMemo(
-    () => ({ images: photos.map((p) => p.url) }),
-    [photos],
-  )
 
   return (
     <div
@@ -61,8 +56,7 @@ export default function MarqueeViewer() {
       onTouchEnd={onTouchEnd}
     >
       {index === 0 && <DiagonalMarqueeCarouselPreview {...cardProps} />}
-      {index === 1 && <MarqueeAlongSvgPathDemo {...imageProps} />}
-      {index === 2 && <CardFanCarouselDemo {...cardProps} />}
+      {index === 1 && <CardFanCarouselDemo {...cardProps} />}
 
       <button
         onClick={prev}
