@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router'
-import { ChevronLeft, ChevronRight, Images, Shield } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import DiagonalMarqueeCarouselPreview from '@/components/ui/great-ui-diagonal-marquee-carousel-demo'
 import MarqueeAlongSvgPathDemo from '@/components/ui/demo'
 import CardFanCarouselDemo from '@/components/ui/card-fan-carousel-demo'
@@ -11,9 +10,6 @@ const MARQUEE_COUNT = 3
 
 const navButtonClasses =
   'absolute top-1/2 -translate-y-1/2 z-50 flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white/80 text-black/70 shadow-lg backdrop-blur-sm hover:bg-white dark:border-white/10 dark:bg-black/50 dark:text-white/70 dark:hover:bg-black/70'
-
-const topLinkClasses =
-  'flex items-center gap-1.5 rounded-full border border-black/10 bg-white/80 px-3 py-1.5 text-xs font-medium text-black/70 shadow backdrop-blur-sm hover:bg-white dark:border-white/10 dark:bg-black/50 dark:text-white/70 dark:hover:bg-black/70'
 
 export default function MarqueeViewer() {
   const [index, setIndex] = useState(0)
@@ -67,17 +63,6 @@ export default function MarqueeViewer() {
       {index === 0 && <DiagonalMarqueeCarouselPreview {...cardProps} />}
       {index === 1 && <MarqueeAlongSvgPathDemo {...imageProps} />}
       {index === 2 && <CardFanCarouselDemo {...cardProps} />}
-
-      <div className="absolute right-4 top-4 z-50 flex items-center gap-2">
-        <Link to="/upload" className={topLinkClasses}>
-          <Images className="h-3.5 w-3.5" />
-          Upload
-        </Link>
-        <Link to="/admin" className={topLinkClasses}>
-          <Shield className="h-3.5 w-3.5" />
-          Admin
-        </Link>
-      </div>
 
       <button
         onClick={prev}
