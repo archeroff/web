@@ -130,7 +130,7 @@ if (secret) {
   if (master) {
     const masterSql =
       `insert into public.settings (key, value) ` +
-      `values ('master_password_hash', encode(digest(${sqlLit(master)}, 'sha256'), 'hex')) ` +
+      `values ('master_password_hash', encode(extensions.digest(${sqlLit(master)}, 'sha256'), 'hex')) ` +
       `on conflict (key) do update set value = excluded.value;`
     console.log("Seeding master password hash…")
     if (!(await runSql(masterSql))) {

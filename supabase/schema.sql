@@ -1,5 +1,9 @@
 -- Al Riyadi photo gallery schema
--- Run this in the Supabase SQL editor. Requires the pgcrypto extension (enabled by default).
+-- Run this in the Supabase SQL editor.
+
+-- pgcrypto provides digest(); on Supabase it lives in the extensions schema.
+-- This makes sure it is installed and enabled (no-op if already present).
+create extension if not exists pgcrypto with schema extensions;
 
 -- Storage bucket (public read, 10MB file cap)
 do $$
@@ -70,14 +74,14 @@ create policy "public read approved" on public.photos
 -- ADMIN_MASTER_PASS GitHub secret, then uncomment and run this once.
 -- If you later rotate the secret, re-run this line with the new value.
 -- insert into public.settings (key, value)
--- values ('master_password_hash', encode(digest('YOUR_MASTER_PASSWORD', 'sha256'), 'hex'));
+-- values ('master_password_hash', encode(extensions.digest('YOUR_MASTER_PASSWORD', 'sha256'), 'hex'));
 
 -- Verify the admin password (server-side hash comparison, hash never leaves the DB)
 create or replace function public.verify_password(pwd text)
 returns boolean
 language sql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
   select coalesce(
     value = encode(digest(pwd, 'sha256'), 'hex'),
@@ -92,7 +96,7 @@ create or replace function public.set_admin_password(master text, new_pwd text)
 returns boolean
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   master_hash text;
