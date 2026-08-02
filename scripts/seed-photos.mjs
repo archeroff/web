@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// Seed photos from ./pix (or ./public/img) into Supabase storage + photos table.
+// Bootstrap the Supabase schema (if a secret key is present) and seed photos
+// from ./pix (or ./public/img) into Supabase storage + photos table.
 //
 // Usage:
 //   node scripts/seed-photos.mjs [--dir ./pix] [--status approved] [--reset]
@@ -7,10 +8,12 @@
 // Reads credentials from .env.local / .env or the shell:
 //   SUPABASE_URL=
 //   SUPABASE_PUBLISHABLE_KEY=
-//   SUPABASE_SECRET_KEY=   (optional, needed only to auto-create the bucket)
+//   SUPABASE_SECRET_KEY=   (service role key — required for schema bootstrap)
+//   ADMIN_MASTER_PASS=     (optional, seeds the admin master password hash)
 //
-// Uses the secret key when present so it can create the bucket if missing;
-// otherwise it uses the publishable key (bucket must already exist).
+// When SUPABASE_SECRET_KEY is present the script applies supabase/schema.sql
+// through the Supabase SQL API, then uploads photos. Without it, the bucket
+// must already exist and the schema must already be applied.
 
 import { createClient } from "@supabase/supabase-js"
 import { readdir, readFile } from "node:fs/promises"
@@ -73,9 +76,68 @@ const mime = (name) => {
   }[ext] || "application/octet-stream"
 }
 
+const sqlLit = (s) => `'${String(s).replace(/'/g, "''")}'`
+
+// Execute arbitrary SQL through Supabase's SQL API using the service role key.
+async function runSql(sqlText) {
+  const attempts = [
+    { name: "/pg/query/v1/query", body: JSON.stringify({ query: sqlText }) },
+    { name: "/rest/v1/rpc/pg_query", body: JSON.stringify({ query: sqlText }) },
+  ]
+  for (const attempt of attempts) {
+    try {
+      const res = await fetch(`${url}${attempt.name}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: secret,
+          Authorization: `Bearer ${secret}`,
+        },
+        body: attempt.body,
+      })
+      if (res.ok) {
+        console.log(`  ✓ SQL executed via ${attempt.name}`)
+        return true
+      }
+      console.log(
+        `  ⚠ ${attempt.name} failed (${res.status}): ${(await res.text()).slice(0, 300)}`,
+      )
+    } catch (e) {
+      console.log(`  ⚠ ${attempt.name} threw: ${e.message}`)
+    }
+  }
+  return false
+}
+
 const supabase = createClient(url, key, {
   auth: { persistSession: false, autoRefreshToken: false },
 })
+
+// ---- apply schema (bucket, storage policies, tables, RLS, RPCs, grants) ----
+if (secret) {
+  const schemaSql = await readFile(path.join(root, "supabase", "schema.sql"), "utf8")
+  console.log("Applying supabase/schema.sql via the SQL API…")
+  if (!(await runSql(schemaSql))) {
+    console.error(
+      "\nCould not apply the schema automatically. Paste supabase/schema.sql into " +
+        "the Supabase SQL editor (https://supabase.com/dashboard/project/_/sql/new), " +
+        "then re-run this workflow.",
+    )
+    process.exit(1)
+  }
+
+  const master = process.env.ADMIN_MASTER_PASS || process.env.VITE_ADMIN_MASTER_PASS
+  if (master) {
+    const masterSql =
+      `insert into public.settings (key, value) ` +
+      `values ('master_password_hash', encode(digest(${sqlLit(master)}, 'sha256'), 'hex')) ` +
+      `on conflict (key) do update set value = excluded.value;`
+    console.log("Seeding master password hash…")
+    if (!(await runSql(masterSql))) {
+      console.warn("  ⚠ Could not seed the master password hash.")
+    }
+  }
+}
 
 // ---- ensure bucket exists ----
 const { data: buckets } = await supabase.storage.listBuckets()
