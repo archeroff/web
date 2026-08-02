@@ -35,7 +35,7 @@ jobs:
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           preCommands: |
             pages project create alriyadi --production-branch=main || true
           command: pages deploy dist --project-name=alriyadi --branch=main
