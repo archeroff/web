@@ -12,6 +12,7 @@ import {
   LogOut,
   ShieldCheck,
   Trash2,
+  Upload,
 } from 'lucide-react'
 import {
   approvePhoto,
@@ -301,13 +302,22 @@ export default function AdminPage() {
             Admin
           </span>
         </div>
-        <button
-          onClick={logout}
-          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
-        >
-          <LogOut className="h-4 w-4" />
-          Log out
-        </button>
+        <div className="flex items-center gap-3">
+          <Link
+            to="/upload"
+            className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/80"
+          >
+            <Upload className="h-4 w-4" />
+            Upload
+          </Link>
+          <button
+            onClick={logout}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <LogOut className="h-4 w-4" />
+            Log out
+          </button>
+        </div>
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-6 md:px-8">

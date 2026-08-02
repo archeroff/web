@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
-import { ArrowLeft, ImagePlus, Loader2, Upload } from 'lucide-react'
+import { ArrowLeft, ImagePlus, Loader2, ShieldCheck, Upload } from 'lucide-react'
 import { getUploadStatus, uploadPhoto } from '@/lib/photos'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
@@ -106,7 +106,16 @@ export default function UploadPage() {
           <ArrowLeft className="h-4 w-4" />
           Back to marquees
         </Link>
-        <span className="text-sm font-semibold">Upload photos</span>
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-semibold">Upload photos</span>
+          <Link
+            to="/admin"
+            className="flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
+            <ShieldCheck className="h-4 w-4" />
+            Admin
+          </Link>
+        </div>
       </header>
 
       <main className="mx-auto max-w-2xl px-4 py-8">
