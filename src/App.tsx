@@ -1,7 +1,7 @@
-import OrbitingCircles02Demo from '@/components/ui/orbiting-circles-02-demo'
+import DiagonalMarqueeCarouselPreview from '@/components/ui/great-ui-diagonal-marquee-carousel-demo'
 
 function App() {
-  return <OrbitingCircles02Demo />
+  return <DiagonalMarqueeCarouselPreview />
 }
 
 export default App
