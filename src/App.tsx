@@ -1,22 +1,25 @@
 import { useEffect, useState } from 'react'
 import DiagonalMarqueeCarouselPreview from '@/components/ui/great-ui-diagonal-marquee-carousel-demo'
 import MarqueeAlongSvgPathDemo from '@/components/ui/demo'
+import CardFanCarouselDemo from '@/components/ui/card-fan-carousel-demo'
 
 const SWITCH_AFTER_MS = 60_000
 
+const MARQUEES = [DiagonalMarqueeCarouselPreview, MarqueeAlongSvgPathDemo, CardFanCarouselDemo]
+
 function App() {
-  const [showSecondMarquee, setShowSecondMarquee] = useState(false)
+  const [index, setIndex] = useState(0)
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowSecondMarquee(true), SWITCH_AFTER_MS)
-    return () => clearTimeout(timer)
+    const interval = setInterval(
+      () => setIndex((i) => (i + 1) % MARQUEES.length),
+      SWITCH_AFTER_MS,
+    )
+    return () => clearInterval(interval)
   }, [])
 
-  return showSecondMarquee ? (
-    <MarqueeAlongSvgPathDemo />
-  ) : (
-    <DiagonalMarqueeCarouselPreview />
-  )
+  const Marquee = MARQUEES[index]
+  return <Marquee />
 }
 
 export default App
