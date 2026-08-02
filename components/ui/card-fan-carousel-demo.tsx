@@ -1,26 +1,16 @@
 import SocialCards from "@/components/ui/card-fan-carousel"
+import type { PhotoCard } from "@/lib/photos"
 
-const imgPath = (n: number) => {
-  const ext =
-    n === 1
-      ? "png"
-      : n === 3 || n === 13
-        ? "webp"
-        : n === 15
-          ? "jpg"
-          : "jpeg"
-  return `/img/${n}.${ext}`
+interface Props {
+  cards: PhotoCard[]
 }
 
-const DEMO_CARDS = Array.from({ length: 15 }, (_, i) => ({
-  imgUrl: imgPath(i + 1),
-  alt: `Al Riyadi dish ${i + 1}`,
-}))
-
-export default function CardFanCarouselDemo() {
+export default function CardFanCarouselDemo({ cards }: Props) {
   return (
     <div className="min-h-screen flex items-center">
-      <SocialCards cards={DEMO_CARDS} />
+      <SocialCards
+        cards={cards.map((c) => ({ imgUrl: c.url, alt: c.alt }))}
+      />
     </div>
   )
 }
