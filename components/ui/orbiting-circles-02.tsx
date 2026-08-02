@@ -3,32 +3,39 @@
 import React from "react";
 import ParticleSphereAnimation from "@/components/ui/orbiting-circles-02-utils/particalsphear";
 
+const orbitPhotos = (start: number, end: number) =>
+  Array.from({ length: end - start + 1 }, (_, i) => {
+    const n = start + i
+    return {
+      src: `/img/${n}.${n === 1 ? "png" : n === 3 || n === 13 ? "webp" : n === 15 ? "jpg" : "jpeg"}`,
+      alt: `dish-${n}`,
+    }
+  })
+
 const orbits = [
   {
     size: "w-110 h-110 md:w-180 md:h-180",
     duration: 18,
-    icons: [
-      { src: "https://images.shadcnspace.com/assets/svgs/supabase.svg", alt: "Supabase", angle: -60 },
-      { src: "https://images.shadcnspace.com/assets/svgs/gemini.svg", alt: "gemini", angle: 0 },
-      { src: "https://images.shadcnspace.com/assets/svgs/make.svg", alt: "Make", angle: 60 },
-    ],
+    icons: orbitPhotos(1, 5).map((p, i) => ({
+      ...p,
+      angle: i * 72,
+    })),
   },
   {
     size: "w-150 h-150 md:w-220 md:h-220",
     duration: 24,
-    icons: [
-      { src: "https://images.shadcnspace.com/assets/svgs/figma.svg", alt: "Figma", angle: 0 },
-      { src: "https://images.shadcnspace.com/assets/svgs/slack.svg", alt: "Slack", angle: -90 },
-    ],
+    icons: orbitPhotos(6, 10).map((p, i) => ({
+      ...p,
+      angle: i * 72,
+    })),
   },
   {
     size: "w-180 h-180 md:w-265 md:h-265",
     duration: 30,
-    icons: [
-      { src: "https://images.shadcnspace.com/assets/svgs/clude.svg", alt: "Claude", angle: -60 },
-      { src: "https://images.shadcnspace.com/assets/svgs/react.svg", alt: "react", angle: 0 },
-      { src: "https://images.shadcnspace.com/assets/svgs/python.svg", alt: "python", angle: 60 },
-    ],
+    icons: orbitPhotos(11, 15).map((p, i) => ({
+      ...p,
+      angle: i * 72,
+    })),
   },
 ];
 
@@ -82,7 +89,7 @@ export default function OrbitingCirclesGlobeDemo() {
             {allIcons.map((iconData, iconIndex) => (
               <div
                 key={iconIndex}
-                className="absolute top-0 left-1/2 h-1/2 -ml-8 origin-bottom flex flex-col justify-start items-center"
+                className="absolute top-0 left-1/2 h-1/2 -ml-6 md:-ml-7 origin-bottom flex flex-col justify-start items-center"
                 style={
                   {
                     "--start-angle": `${iconData.angle}deg`,
@@ -91,7 +98,7 @@ export default function OrbitingCirclesGlobeDemo() {
                 }
               >
                 <div
-                  className="p-3 sm:p-4 border border-border rounded-full bg-background -mt-8 relative z-10"
+                  className="w-12 h-12 md:w-14 md:h-14 p-1 -mt-6 md:-mt-7 rounded-full border border-border bg-background shadow-lg relative z-10"
                   style={
                     {
                       "--counter-offset": `${-iconData.angle}deg`,
@@ -102,9 +109,9 @@ export default function OrbitingCirclesGlobeDemo() {
                   <img
                     src={iconData.src}
                     alt={iconData.alt}
-                    width={32}
-                    height={32}
-                    className="w-6 h-6 md:w-8 md:h-8"
+                    width={48}
+                    height={48}
+                    className="w-full h-full rounded-full object-cover"
                   />
                 </div>
               </div>
