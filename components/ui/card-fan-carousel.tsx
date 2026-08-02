@@ -259,6 +259,43 @@ export default function SocialCards({ cards }: SocialCardsProps) {
 
   return (
     <section className="flex flex-col items-center w-full py-4 lg:py-8 px-4 md:px-8 relative z-20">
+      <style>{`
+        .fan-layout {
+          height: 21rem;
+        }
+        .fan-card {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 12rem;
+          height: 21rem;
+          margin-left: -6rem;
+          margin-top: -10.5rem;
+          overflow: hidden;
+          border-radius: 1rem;
+          box-shadow: 0 12px 32px rgba(0,0,0,0.28);
+          background: var(--background);
+          will-change: transform, opacity;
+        }
+        @media (min-width: 640px) {
+          .fan-layout { height: 24rem; }
+          .fan-card {
+            width: 14rem;
+            height: 24rem;
+            margin-left: -7rem;
+            margin-top: -12rem;
+          }
+        }
+        @media (min-width: 1024px) {
+          .fan-layout { height: 28rem; }
+          .fan-card {
+            width: 16rem;
+            height: 28rem;
+            margin-left: -8rem;
+            margin-top: -14rem;
+          }
+        }
+      `}</style>
       <div className="flex items-center justify-center w-full max-w-[90rem]">
         <div ref={containerRef} className="fan-layout flex relative justify-center items-center w-full max-w-[80rem]">
           {cards.map((card, index) => {
