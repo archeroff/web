@@ -48,6 +48,19 @@ export async function listApproved(): Promise<PhotoCard[]> {
   return data
 }
 
+export interface UploadStatus {
+  configured: boolean
+  bucketExists: boolean | null
+  bucketError?: string
+}
+
+export async function getUploadStatus(): Promise<UploadStatus> {
+  if (!supabase) return { configured: false, bucketExists: null }
+  const { data, error } = await supabase.storage.listBuckets()
+  if (error) return { configured: true, bucketExists: null, bucketError: error.message }
+  return { configured: true, bucketExists: data.some((b) => b.id === "photos") }
+}
+
 export async function uploadPhoto(file: File): Promise<{ ok: boolean; error?: string }> {
   if (!supabase) return { ok: false, error: "Supabase is not configured" }
 
@@ -64,7 +77,16 @@ export async function uploadPhoto(file: File): Promise<{ ok: boolean; error?: st
       contentType: file.type,
     })
 
-  if (uploadError) return { ok: false, error: uploadError.message }
+  if (uploadError) {
+    if (uploadError.message.toLowerCase().includes("bucket")) {
+      return {
+        ok: false,
+        error:
+          'Storage bucket "photos" is missing. Run supabase/schema.sql in the Supabase SQL editor, then retry.',
+      }
+    }
+    return { ok: false, error: uploadError.message }
+  }
 
   const { error: insertError } = await supabase
     .from("photos")

@@ -1,7 +1,7 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
 import { ArrowLeft, ImagePlus, Loader2, Upload } from 'lucide-react'
-import { uploadPhoto } from '@/lib/photos'
+import { getUploadStatus, uploadPhoto } from '@/lib/photos'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 
@@ -31,21 +31,20 @@ export default function UploadPage() {
   const inputRef = useRef<HTMLInputElement>(null)
 
   const configured = isSupabaseConfigured()
+  const [status, setStatus] = useState<{ bucketExists: boolean | null; bucketError?: string }>({
+    bucketExists: null,
+  })
 
-  const addFiles = (incoming: FileList | File[]) => {
-    const next = Array.from(incoming).map((file) => ({
-      file,
-      status: 'pending' as const,
-      error: validate(file),
-    }))
-    setFiles((prev) => [...prev, ...next])
-  }
-
-  const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    setDragging(false)
-    if (e.dataTransfer.files?.length) addFiles(e.dataTransfer.files)
-  }
+  useEffect(() => {
+    if (!configured) return
+    let alive = true
+    getUploadStatus().then((s) => {
+      if (alive) setStatus({ bucketExists: s.bucketExists, bucketError: s.bucketError })
+    })
+    return () => {
+      alive = false
+    }
+  }, [configured])
 
   const uploadAll = async () => {
     if (!configured) return
@@ -66,6 +65,21 @@ export default function UploadPage() {
       setFiles([...next])
     }
     setUploadedCount(done)
+  }
+
+  const addFiles = (incoming: FileList | File[]) => {
+    const next = Array.from(incoming).map((file) => ({
+      file,
+      status: 'pending' as const,
+      error: validate(file),
+    }))
+    setFiles((prev) => [...prev, ...next])
+  }
+
+  const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    setDragging(false)
+    if (e.dataTransfer.files?.length) addFiles(e.dataTransfer.files)
   }
 
   const removeFile = (i: number) => {
@@ -102,6 +116,18 @@ export default function UploadPage() {
           </div>
         ) : (
           <>
+            {status.bucketExists === false && (
+              <div className="mb-4 rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+                The <code className="font-mono text-xs">photos</code> storage bucket
+                doesn&apos;t exist yet. Run <code className="font-mono text-xs">supabase/schema.sql</code>{' '}
+                in the Supabase SQL editor, then retry.
+              </div>
+            )}
+            {status.bucketError && (
+              <div className="mb-4 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-600 dark:text-amber-400">
+                Couldn&apos;t reach Supabase storage: {status.bucketError}
+              </div>
+            )}
             <div
               onDragOver={(e) => {
                 e.preventDefault()
