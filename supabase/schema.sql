@@ -1,10 +1,39 @@
 -- Al Riyadi photo gallery schema
 -- Run this in the Supabase SQL editor. Requires the pgcrypto extension (enabled by default).
 
--- Storage bucket (public read)
-insert into storage.buckets (id, name, public)
-values ('photos', 'photos', true)
-on conflict (id) do nothing;
+-- Storage bucket (public read, 10MB file cap)
+do $$
+begin
+  if not exists (select 1 from storage.buckets where id = 'photos') then
+    begin
+      perform storage.create_bucket(
+        'photos',
+        jsonb_build_object('public', true, 'file_size_limit', 10485760)
+      );
+    exception when others then
+      insert into storage.buckets (id, name, public, file_size_limit)
+      values ('photos', 'photos', true, 10485760)
+      on conflict (id) do update
+        set public = true, file_size_limit = excluded.file_size_limit;
+    end;
+  end if;
+end $$;
+
+-- Storage access policies (idempotent)
+drop policy if exists "public upload photos" on storage.objects;
+create policy "public upload photos"
+  on storage.objects for insert to anon, authenticated
+  with check (bucket_id = 'photos');
+
+drop policy if exists "public read photos" on storage.objects;
+create policy "public read photos"
+  on storage.objects for select to anon, authenticated
+  using (bucket_id = 'photos');
+
+drop policy if exists "public delete photos" on storage.objects;
+create policy "public delete photos"
+  on storage.objects for delete to anon, authenticated
+  using (bucket_id = 'photos');
 
 -- Photos table
 create table if not exists public.photos (
@@ -26,10 +55,12 @@ alter table public.photos enable row level security;
 alter table public.settings enable row level security;
 
 -- Photos: anyone can upload (lands as pending), anyone can read approved rows
+drop policy if exists "public upload" on public.photos;
 create policy "public upload" on public.photos
   for insert to anon, authenticated
   with check (true);
 
+drop policy if exists "public read approved" on public.photos;
 create policy "public read approved" on public.photos
   for select to anon, authenticated
   using (status = 'approved');
