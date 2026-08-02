@@ -31,8 +31,9 @@ jobs:
       - name: Typecheck and build
         env:
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
-          VITE_ADMIN_MASTER_PASSCODE: ${{ secrets.ADMIN_MASTER_PASSCODE }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          VITE_ADMIN_MASTER_PASS: ${{ secrets.ADMIN_MASTER_PASS }}
         run: npm run build
 
       - name: Deploy to Cloudflare Pages

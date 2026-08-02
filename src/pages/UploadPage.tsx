@@ -97,7 +97,7 @@ export default function UploadPage() {
           <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-6 text-sm text-destructive">
             Supabase isn&apos;t configured yet. Set{' '}
             <code className="font-mono text-xs">VITE_SUPABASE_URL</code> and{' '}
-            <code className="font-mono text-xs">VITE_SUPABASE_ANON_KEY</code>{' '}
+            <code className="font-mono text-xs">VITE_SUPABASE_PUBLISHABLE_KEY</code>{' '}
             in the build, then redeploy.
           </div>
         ) : (

@@ -36,7 +36,7 @@ create policy "public read approved" on public.photos
 
 -- Seed the master password hash.
 -- IMPORTANT: replace YOUR_MASTER_PASSWORD with the same value you set as the
--- ADMIN_MASTER_PASSCODE GitHub secret, then uncomment and run this once.
+-- ADMIN_MASTER_PASS GitHub secret, then uncomment and run this once.
 -- If you later rotate the secret, re-run this line with the new value.
 -- insert into public.settings (key, value)
 -- values ('master_password_hash', encode(digest('YOUR_MASTER_PASSWORD', 'sha256'), 'hex'));
