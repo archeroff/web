@@ -127,6 +127,18 @@ export async function approvePhoto(id: string): Promise<boolean> {
   return !error
 }
 
+export async function setPhotoStatus(
+  ids: string[],
+  status: "pending" | "approved",
+): Promise<boolean> {
+  if (!supabase || ids.length === 0) return false
+  const { error } = await supabase.rpc("set_photo_status", {
+    p_ids: ids,
+    p_status: status,
+  })
+  return !error
+}
+
 export async function deletePhoto(id: string, url: string): Promise<boolean> {
   if (!supabase) return false
   const name = storageNameFromUrl(url)

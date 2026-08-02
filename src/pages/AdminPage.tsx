@@ -19,6 +19,7 @@ import {
   deletePhoto,
   listAll,
   setAdminPassword,
+  setPhotoStatus,
   updateOrder,
   verifyAdminPassword,
   type Photo,
@@ -206,6 +207,9 @@ export default function AdminPage() {
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null)
   const [dragIndex, setDragIndex] = useState<number | null>(null)
   const [overIndex, setOverIndex] = useState<number | null>(null)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [confirmingBulkDelete, setConfirmingBulkDelete] = useState(false)
+  const [bulkError, setBulkError] = useState('')
 
   const load = async () => {
     setLoading(true)
@@ -227,6 +231,8 @@ export default function AdminPage() {
     sessionStorage.removeItem(SESSION_KEY)
     setAuthed(false)
     setPhotos([])
+    setSelected(new Set())
+    setConfirmingBulkDelete(false)
   }
 
   const pendingCount = photos.filter((p) => p.status === 'pending').length
@@ -282,6 +288,82 @@ export default function AdminPage() {
     }
   }
 
+  const selectionMode = selected.size > 0
+  const selectedPhotos = photos.filter((p) => selected.has(p.id))
+  const selectedPending = selectedPhotos.filter((p) => p.status === 'pending')
+  const selectedApproved = selectedPhotos.filter((p) => p.status === 'approved')
+
+  const allVisibleSelected =
+    visible.length > 0 && visible.every((p) => selected.has(p.id))
+
+  const toggleSelect = (id: string) => {
+    setBulkError('')
+    setConfirmingBulkDelete(false)
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const toggleSelectAll = () => {
+    setBulkError('')
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (allVisibleSelected) visible.forEach((p) => next.delete(p.id))
+      else visible.forEach((p) => next.add(p.id))
+      return next
+    })
+  }
+
+  const clearSelection = () => {
+    setSelected(new Set())
+    setConfirmingBulkDelete(false)
+    setBulkError('')
+  }
+
+  const onBulkApprove = async () => {
+    const ids = selectedPending.map((p) => p.id)
+    if (ids.length === 0) return
+    const ok = await setPhotoStatus(ids, 'approved')
+    if (ok) {
+      const idSet = new Set(ids)
+      setPhotos((prev) =>
+        prev.map((p) => (idSet.has(p.id) ? { ...p, status: 'approved' } : p)),
+      )
+      clearSelection()
+    } else {
+      setBulkError('Approve failed. Make sure the schema is up to date.')
+    }
+  }
+
+  const onBulkReject = async () => {
+    const ids = selectedApproved.map((p) => p.id)
+    if (ids.length === 0) return
+    const ok = await setPhotoStatus(ids, 'pending')
+    if (ok) {
+      const idSet = new Set(ids)
+      setPhotos((prev) =>
+        prev.map((p) => (idSet.has(p.id) ? { ...p, status: 'pending' } : p)),
+      )
+      clearSelection()
+    } else {
+      setBulkError('Reject failed. Make sure the schema is up to date.')
+    }
+  }
+
+  const onBulkDelete = async () => {
+    let failed = false
+    for (const p of selectedPhotos) {
+      const ok = await deletePhoto(p.id, p.url)
+      if (!ok) failed = true
+    }
+    setPhotos((prev) => prev.filter((p) => !selected.has(p.id)))
+    clearSelection()
+    if (failed) setBulkError('Some photos could not be deleted.')
+  }
+
   if (!authed) return <LoginScreen onLogin={onLogin} />
 
   const isApprovedView = filter === 'approved'
@@ -320,7 +402,12 @@ export default function AdminPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-6 md:px-8">
+      <main
+        className={cn(
+          'mx-auto max-w-6xl px-4 py-6 md:px-8',
+          selectionMode && 'pb-32',
+        )}
+      >
         <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-1 rounded-lg border border-border bg-background p-1">
             {(['pending', 'approved', 'all'] as Filter[]).map((f) => (
@@ -373,9 +460,9 @@ export default function AdminPage() {
             {visible.map((photo, i) => (
               <div
                 key={photo.id}
-                draggable={isApprovedView}
+                draggable={isApprovedView && !selectionMode}
                 onDragStart={(e) => {
-                  if (!isApprovedView) return
+                  if (!isApprovedView || selectionMode) return
                   setDragIndex(i)
                   e.dataTransfer.effectAllowed = 'move'
                 }}
@@ -398,9 +485,10 @@ export default function AdminPage() {
                 }}
                 className={cn(
                   'group overflow-hidden rounded-xl border border-border bg-background shadow-sm transition-all',
-                  isApprovedView && 'cursor-grab active:cursor-grabbing',
+                  isApprovedView && !selectionMode && 'cursor-grab active:cursor-grabbing',
                   overIndex === i && dragIndex !== null && dragIndex !== i &&
                     'ring-2 ring-primary',
+                  selected.has(photo.id) && 'ring-2 ring-primary',
                 )}
               >
                 <div className="relative aspect-[4/5] overflow-hidden">
@@ -409,7 +497,20 @@ export default function AdminPage() {
                     alt={photo.alt}
                     className="h-full w-full object-cover"
                   />
-                  <div className="absolute left-2 top-2">
+                  <button
+                    onClick={() => toggleSelect(photo.id)}
+                    aria-label={selected.has(photo.id) ? 'Deselect photo' : 'Select photo'}
+                    aria-pressed={selected.has(photo.id)}
+                    className={cn(
+                      'absolute left-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full border shadow-sm transition-colors',
+                      selected.has(photo.id)
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-white/70 bg-black/40 text-white hover:bg-black/60',
+                    )}
+                  >
+                    {selected.has(photo.id) && <Check className="h-3.5 w-3.5" />}
+                  </button>
+                  <div className="absolute bottom-2 left-2">
                     <StatusBadge status={photo.status} />
                   </div>
                   {isApprovedView && (
@@ -492,6 +593,83 @@ export default function AdminPage() {
           <SettingsSection />
         </div>
       </main>
+
+      {selectionMode && (
+        <div className="fixed inset-x-0 bottom-4 z-50 flex justify-center px-4">
+          <div className="flex flex-wrap items-center justify-center gap-2 rounded-2xl border border-border bg-background px-4 py-3 shadow-xl">
+            <button
+              onClick={toggleSelectAll}
+              className="rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              {allVisibleSelected ? 'Deselect all' : 'Select all'}
+            </button>
+            <span className="text-sm font-medium">
+              {selected.size} selected
+            </span>
+            {selectedPending.length > 0 && (
+              <button
+                onClick={onBulkApprove}
+                className="flex items-center gap-1 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-sm font-medium text-emerald-600 hover:bg-emerald-500/25 dark:text-emerald-400"
+              >
+                <Check className="h-4 w-4" />
+                Approve {selectedPending.length}
+              </button>
+            )}
+            {selectedApproved.length > 0 && (
+              <button
+                onClick={onBulkReject}
+                className="flex items-center gap-1 rounded-lg bg-amber-500/15 px-3 py-1.5 text-sm font-medium text-amber-600 hover:bg-amber-500/25 dark:text-amber-400"
+              >
+                Reject {selectedApproved.length}
+              </button>
+            )}
+            {confirmingBulkDelete ? (
+              <span className="flex items-center gap-1.5 text-sm">
+                <span className="text-muted-foreground">
+                  Delete {selected.size}?
+                </span>
+                <button
+                  onClick={onBulkDelete}
+                  className="rounded-lg bg-destructive/10 px-2 py-1 font-medium text-destructive hover:bg-destructive/20"
+                >
+                  Yes
+                </button>
+                <button
+                  onClick={() => setConfirmingBulkDelete(false)}
+                  className="rounded-lg px-2 py-1 text-muted-foreground hover:bg-muted"
+                >
+                  No
+                </button>
+              </span>
+            ) : (
+              <button
+                onClick={() => {
+                  setBulkError('')
+                  setConfirmingBulkDelete(true)
+                }}
+                className="flex items-center gap-1 rounded-lg bg-destructive/10 px-3 py-1.5 text-sm font-medium text-destructive hover:bg-destructive/20"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete {selected.size}
+              </button>
+            )}
+            <button
+              onClick={clearSelection}
+              className="rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {bulkError && (
+        <div className="fixed bottom-24 inset-x-0 z-50 flex justify-center px-4">
+          <div className="rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-2 text-sm text-destructive">
+            {bulkError}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

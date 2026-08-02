@@ -153,6 +153,21 @@ as $$
   update public.photos set status = 'approved' where id = p_id;
 $$;
 
+-- Admin: bulk approve / reject a list of photos
+create or replace function public.set_photo_status(p_ids uuid[], p_status text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if p_status not in ('pending', 'approved') then
+    raise exception 'invalid status: %', p_status;
+  end if;
+  update public.photos set status = p_status where id = any(p_ids);
+end;
+$$;
+
 -- Admin: delete a photo row (storage object is removed by the client)
 create or replace function public.delete_photo(p_id uuid)
 returns void
@@ -183,5 +198,6 @@ grant execute on function public.verify_password(text) to anon, authenticated;
 grant execute on function public.set_admin_password(text, text) to anon, authenticated;
 grant execute on function public.list_photos_all() to anon, authenticated;
 grant execute on function public.approve_photo(uuid) to anon, authenticated;
+grant execute on function public.set_photo_status(uuid[], text) to anon, authenticated;
 grant execute on function public.delete_photo(uuid) to anon, authenticated;
 grant execute on function public.update_order(uuid[]) to anon, authenticated;
