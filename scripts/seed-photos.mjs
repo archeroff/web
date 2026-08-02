@@ -32,6 +32,7 @@ const has = (name) => args.includes(name)
 
 const sourceDir = path.resolve(root, flag("--dir") || "pix")
 const status = flag("--status") || "approved"
+const schemaOnly = has("--schema-only")
 
 // ---- load .env.local then .env (simple parser) ----
 for (const file of [".env.local", ".env"]) {
@@ -139,6 +140,11 @@ if (secret) {
   }
 }
 
+if (schemaOnly) {
+  console.log("Schema applied in schema-only mode. Skipping photo upload.")
+  process.exit(0)
+}
+
 // ---- ensure bucket exists ----
 const { data: buckets } = await supabase.storage.listBuckets()
 let bucketOk = buckets?.some((b) => b.id === bucket) ?? false
@@ -174,13 +180,18 @@ const { data: existing } = await supabase.from("photos").select("url")
 const existingUrls = new Set((existing ?? []).map((r) => r.url))
 
 // ---- upload ----
-const files = (await readdir(sourceDir))
-  .filter((f) => /\.(png|jpe?g|webp|gif)$/i.test(f))
-  .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+let files = []
+try {
+  files = (await readdir(sourceDir))
+    .filter((f) => /\.(png|jpe?g|webp|gif)$/i.test(f))
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+} catch {
+  files = []
+}
 
 if (files.length === 0) {
-  console.error(`No images found in ${sourceDir}`)
-  process.exit(1)
+  console.warn(`No images found in ${sourceDir}; skipping photo seeding.`)
+  process.exit(0)
 }
 
 let ok = 0
