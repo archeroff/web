@@ -2,9 +2,11 @@
 
 A photo gallery for **Al Riyadi** with an animated marquee viewer, public photo uploads, and a passcode-protected admin panel for moderation and ordering.
 
-![Build](https://github.com/archeroff/riy/actions/workflows/deploy.yml/badge.svg)
-![Cloudflare Pages](https://deploy-badge.workers.cloudflare.com/?project=alriyadi)
+[![Build](https://github.com/archeroff/riy/actions/workflows/deploy.yml/badge.svg?job=build)](https://github.com/archeroff/riy/actions/workflows/deploy.yml)
+[![Backend deploy (Supabase)](https://github.com/archeroff/riy/actions/workflows/deploy.yml/badge.svg?job=deploy-backend)](https://github.com/archeroff/riy/actions/workflows/deploy.yml)
+[![Frontend deploy (Cloudflare Pages)](https://github.com/archeroff/riy/actions/workflows/deploy.yml/badge.svg?job=deploy-frontend)](https://github.com/archeroff/riy/actions/workflows/deploy.yml)
 
+- **Live site**: [alriyadi.pages.dev](https://alriyadi.pages.dev)
 - **CI/CD**: GitHub Actions — `deploy.yml` (build + Supabase backend + Cloudflare Pages frontend)
 - **Version**: 0.0.0 (`package.json`)
 - **License**: Not detected (no license file in the repository)
@@ -356,7 +358,7 @@ Deployment is automated via GitHub Actions (see CI/CD) on every push to `main`.
 
 ### Frontend — Cloudflare Pages
 
-The SPA is deployed to Cloudflare Pages (project `alriyadi`):
+The SPA is deployed to Cloudflare Pages (project `alriyadi`) and is live at [https://alriyadi.pages.dev](https://alriyadi.pages.dev):
 
 - `wrangler pages project create alriyadi --production-branch=main` (idempotent)
 - `wrangler pages deploy dist --project-name=alriyadi --branch=main`
