@@ -2,9 +2,7 @@
 
 A photo gallery for **Al Riyadi** with an animated marquee viewer, public photo uploads, and a passcode-protected admin panel for moderation and ordering.
 
-[![Build](https://img.shields.io/github/actions/workflow/status/archeroff/riy/deploy.yml?job=build&label=Build)](https://github.com/archeroff/riy/actions/workflows/deploy.yml)
-[![Supabase](https://img.shields.io/github/actions/workflow/status/archeroff/riy/deploy.yml?job=deploy-backend&label=Supabase)](https://github.com/archeroff/riy/actions/workflows/deploy.yml)
-[![Cloudflare](https://img.shields.io/github/actions/workflow/status/archeroff/riy/deploy.yml?job=deploy-frontend&label=Cloudflare)](https://github.com/archeroff/riy/actions/workflows/deploy.yml)
+[![Build](https://img.shields.io/github/actions/workflow/status/archeroff/riy/deploy.yml?job=build&label=Build)](https://github.com/archeroff/riy/actions/workflows/deploy.yml) [![Supabase](https://img.shields.io/github/actions/workflow/status/archeroff/riy/deploy.yml?job=deploy-backend&label=Supabase)](https://github.com/archeroff/riy/actions/workflows/deploy.yml) [![Cloudflare](https://img.shields.io/github/actions/workflow/status/archeroff/riy/deploy.yml?job=deploy-frontend&label=Cloudflare)](https://github.com/archeroff/riy/actions/workflows/deploy.yml)
 
 - **Live site**: [alriyadi.pages.dev](https://alriyadi.pages.dev)
 - **CI/CD**: GitHub Actions — `deploy.yml` (build + Supabase backend + Cloudflare Pages frontend)
