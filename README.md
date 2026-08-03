@@ -3,8 +3,8 @@
 A photo gallery for **Al Riyadi** with an animated marquee viewer, public photo uploads, and a passcode-protected admin panel for moderation and ordering.
 
 [![Build](https://github.com/archeroff/riy/actions/workflows/deploy.yml/badge.svg?job=build)](https://github.com/archeroff/riy/actions/workflows/deploy.yml)
-[![Backend deploy (Supabase)](https://github.com/archeroff/riy/actions/workflows/deploy.yml/badge.svg?job=deploy-backend)](https://github.com/archeroff/riy/actions/workflows/deploy.yml)
-[![Frontend deploy (Cloudflare Pages)](https://github.com/archeroff/riy/actions/workflows/deploy.yml/badge.svg?job=deploy-frontend)](https://github.com/archeroff/riy/actions/workflows/deploy.yml)
+[![Supabase](https://github.com/archeroff/riy/actions/workflows/deploy.yml/badge.svg?job=deploy-backend)](https://github.com/archeroff/riy/actions/workflows/deploy.yml)
+[![Cloudflare](https://github.com/archeroff/riy/actions/workflows/deploy.yml/badge.svg?job=deploy-frontend)](https://github.com/archeroff/riy/actions/workflows/deploy.yml)
 
 - **Live site**: [alriyadi.pages.dev](https://alriyadi.pages.dev)
 - **CI/CD**: GitHub Actions — `deploy.yml` (build + Supabase backend + Cloudflare Pages frontend)
