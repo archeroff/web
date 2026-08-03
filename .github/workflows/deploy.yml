@@ -3,6 +3,8 @@ name: Build, Deploy backend, Deploy frontend
 on:
   push:
     branches: [main]
+  schedule:
+    - cron: "0 3 * * *"
   workflow_dispatch:
 
 permissions:
